@@ -13,6 +13,9 @@ def main():
     request_target = request_line[1]
     if request_target == "/":
         connection.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
+    elif request_target.startswith("/echo/"):
+        string = request_target.split("/")[-1]
+        connection.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(string)}\r\n\r\n{string}".encode("ISO-8859-1"))
     else:
         connection.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
 
