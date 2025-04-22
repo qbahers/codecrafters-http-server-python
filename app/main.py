@@ -1,4 +1,6 @@
+import os
 import socket  # noqa: F401
+import sys
 import threading
 
 
@@ -25,6 +27,15 @@ def handle_request(connection):
     elif request_target.startswith("/user-agent"):
         user_agent = next(x for x in headers if x.lower().startswith("user-agent:")).split(":")[-1].strip()
         connection.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode("ISO-8859-1"))
+    elif request_target.startswith("/files/"):
+        filename = request_target.split("/")[-1]
+        file = os.path.join(sys.argv[2], filename)
+        try:
+            with open(file) as f:
+                data = f.read()
+                connection.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(data)}\r\n\r\n{data}".encode("ISO-8859-1"))
+        except:
+            connection.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
     else:
         connection.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
     connection.close()
