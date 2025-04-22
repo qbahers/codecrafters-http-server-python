@@ -1,4 +1,5 @@
 import socket  # noqa: F401
+import threading
 
 
 def main():
@@ -6,7 +7,11 @@ def main():
     print("Logs from your program will appear here!")
 
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    connection, address = server_socket.accept() # wait for client
+    while True:
+        connection, address = server_socket.accept() # wait for client
+        threading.Thread(target=handle_request, args=(connection,), daemon=True).start()
+
+def handle_request(connection):
     data = connection.recv(1024).decode("ISO-8859-1").split("\r\n\r\n")
     request_header = data[0].split("\r\n")
     request_line = request_header[0].split()
@@ -22,6 +27,7 @@ def main():
         connection.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode("ISO-8859-1"))
     else:
         connection.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
+    connection.close()
 
 
 if __name__ == "__main__":
