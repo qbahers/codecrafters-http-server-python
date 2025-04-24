@@ -25,7 +25,8 @@ def handle_request(connection):
         connection.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
     elif request_target.startswith("/echo/"):
         string = request_target.split("/")[-1]
-        content_encoding = "Content-Encoding: gzip\r\n" if "accept-encoding:gzip" in [x.lower().replace(": ", ":") for x in headers] else ""
+        accept_encoding = next((x for x in headers if x.lower().startswith("accept-encoding:")), None)
+        content_encoding = "Content-Encoding: gzip\r\n" if accept_encoding and "gzip" in [x.strip() for x in accept_encoding.split(":")[-1].split(",")] else ""
         connection.sendall(f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(string)}\r\n{content_encoding}\r\n{string}".encode("ISO-8859-1"))
     elif request_target.startswith("/user-agent"):
         user_agent = next(x for x in headers if x.lower().startswith("user-agent:")).split(":")[-1].strip()
